@@ -9,21 +9,25 @@ use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\ProdutoEstoqueController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/',[DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
 
-Route::resource('/clientes', ClienteController::class)->middleware(['auth']);
-Route::resource('/fornecedores', FornecedorController::class)->middleware(['auth']);
-Route::resource('/produtos', ProdutoController::class)->middleware(['auth']);
-Route::post('estoques/store', [ProdutoEstoqueController::class, 'store'])->name('estoques.store');
-Route::resource('/estoque', ProdutoEstoqueController::class)->middleware(['auth'])->except('store');
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Recursos principais
+    Route::resources([
+        'clientes' => ClienteController::class,
+        'fornecedores' => FornecedorController::class,
+        'produtos' => ProdutoController::class,
+        'movimentacoes' => MovimentacaoController::class,
+        'admin' => AdminController::class,
+    ]);
 
-
-Route::resource('/movimentacoes', MovimentacaoController::class)->middleware(['auth']);
-
-
-
-
-Route::resource('/admin', AdminController::class)->middleware(['auth']);
+    // Estoque
+    Route::prefix('estoque')->name('estoque.')->group(function () {
+        Route::post('store', [ProdutoEstoqueController::class, 'store'])->name('store');
+        Route::resource('/', ProdutoEstoqueController::class)->except('store');
+    });
+});
 
 require __DIR__.'/auth.php';
